@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Likes & Dislikes Grammar Quest!</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        heading: ['Fredoka', 'sans-serif'],
+                        body: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            purple: '#6C5CE7',
+                            pink: '#FD79A8',
+                            yellow: '#FDCB6E',
+                            green: '#00B894',
+                            blue: '#0984E3',
+                            orange: '#E17055',
+                            dark: '#2D3436'
+                        }
+                    },
+                    boxShadow: {
+                        'pop': '0 8px 0px 0px rgba(0, 0, 0, 0.15)',
+                        'pop-sm': '0 4px 0px 0px rgba(0, 0, 0, 0.15)',
+                        'pop-inner': 'inset 0 4px 0px 0px rgba(0, 0, 0, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #F4F7FE;
+        }
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .animate-bounce-short {
+            animation: bounceShort 0.5s ease infinite alternate;
+        }
+        @keyframes bounceShort {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-8px); }
+        }
+        .card-glow {
+            transition: all 0.2s ease;
+        }
+        .card-glow:hover {
+            transform: translateY(-4px);
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between selection:bg-brand-pink selection:text-white pb-12">
+
+    <!-- TOP HEADER / NAVBAR -->
+    <header class="bg-white border-b-4 border-slate-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+            <!-- Logo -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('guide')">
+                <div class="w-12 h-12 bg-gradient-to-tr from-brand-purple to-brand-pink rounded-2xl flex items-center justify-center text-white text-2xl shadow-pop-sm transform hover:rotate-6 transition-transform">
+                    <i class="fa-solid fa-heart"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold font-heading text-slate-800 leading-none">Likes & Dislikes</h1>
+                    <span class="text-xs font-bold text-brand-purple tracking-wider uppercase">Grammar Master Quest</span>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex items-center gap-3 sm:gap-6 bg-slate-100 px-4 py-2 rounded-2xl border-2 border-slate-200">
+                <!-- Score -->
+                <div class="flex items-center space-x-2" title="Total XP Points">
+                    <i class="fa-solid fa-star text-yellow-400 text-xl animate-pulse"></i>
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase leading-none">Points</div>
+                        <div id="score-display" class="text-lg font-bold font-heading text-slate-700 leading-none">0</div>
+                    </div>
+                </div>
+                <!-- Divider -->
+                <div class="h-6 w-0.5 bg-slate-300"></div>
+                <!-- Streak -->
+                <div class="flex items-center space-x-2" title="Current Streak">
+                    <i class="fa-solid fa-fire text-orange-500 text-xl"></i>
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase leading-none">Streak</div>
+                        <div id="streak-display" class="text-lg font-bold font-heading text-slate-700 leading-none">0</div>
+                    </div>
+                </div>
+                <!-- Divider -->
+                <div class="h-6 w-0.5 bg-slate-300"></div>
+                <!-- Badges -->
+                <div class="flex items-center space-x-2" title="Badges Unlocked">
+                    <i class="fa-solid fa-award text-brand-purple text-xl"></i>
+                    <div>
+                        <div class="text-[10px] font-bold text-slate-400 uppercase leading-none">Badges</div>
+                        <div id="badge-display" class="text-lg font-bold font-heading text-slate-700 leading-none">0/4</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="max-w-6xl mx-auto px-4 mt-2 flex space-x-2 overflow-x-auto pb-2 scrollbar-none">
+            <button id="tab-guide" onclick="switchTab('guide')" class="tab-btn flex items-center space-x-2 px-5 py-2.5 rounded-xl font-heading font-bold text-sm transition-all bg-brand-purple text-white shadow-pop-sm">
+                <i class="fa-solid fa-book-open"></i>
+                <span>Grammar Guide</span>
+            </button>
+            <button id="tab-choice" onclick="switchTab('choice')" class="tab-btn flex items-center space-x-2 px-5 py-2.5 rounded-xl font-heading font-bold text-sm transition-all bg-white text-slate-600 hover:bg-slate-100 border-2 border-slate-200">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Do or Does?</span>
+            </button>
+            <button id="tab-builder" onclick="switchTab('builder')" class="tab-btn flex items-center space-x-2 px-5 py-2.5 rounded-xl font-heading font-bold text-sm transition-all bg-white text-slate-600 hover:bg-slate-100 border-2 border-slate-200">
+                <i class="fa-solid fa-puzzle-piece"></i>
+                <span>Sentence Builder</span>
+            </button>
+            <button id="tab-profile" onclick="switchTab('profile')" class="tab-btn flex items-center space-x-2 px-5 py-2.5 rounded-xl font-heading font-bold text-sm transition-all bg-white text-slate-600 hover:bg-slate-100 border-2 border-slate-200">
+                <i class="fa-solid fa-users"></i>
+                <span>Character Profiles</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="max-w-5xl mx-auto px-4 mt-6 flex-grow">
+
+        <!-- ================= SECTION 1: GRAMMAR GUIDE ================= -->
+        <section id="section-guide" class="space-y-6">
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-r from-brand-purple to-indigo-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+                <div class="relative z-10 max-w-2xl">
+                    <span class="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Cheat Sheet</span>
+                    <h2 class="text-3xl sm:text-4xl font-heading font-bold mt-2">Master Likes & Dislikes!</h2>
+                    <p class="mt-2 text-indigo-100 text-base sm:text-lg">Learn when to add the magical <span class="bg-yellow-400 text-slate-900 px-2 py-0.5 rounded-lg font-bold">'S'</span> and when to use <span class="bg-pink-500 text-white px-2 py-0.5 rounded-lg font-bold">Do / Does</span>.</p>
+                </div>
+                <div class="absolute -right-6 -bottom-6 text-white/10 text-9xl font-black pointer-events-none">
+                    <i class="fa-solid fa-thumbs-up"></i>
+                </div>
+            </div>
+
+            <!-- Subject Grouping Cards -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Group 1: I, You, We, They -->
+                <div class="bg-white rounded-3xl p-6 border-4 border-emerald-100 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-emerald-500 text-white font-bold px-4 py-1 rounded-bl-2xl text-xs uppercase tracking-wider">
+                        Group A (Plural & I/You)
+                    </div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl font-bold font-heading">
+                            I / WE
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold font-heading text-slate-800">I, You, We, They</h3>
+                            <p class="text-xs text-slate-500">Verbs stay in their Base Form! No 'S' added.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 font-medium text-slate-700">
+                        <div class="bg-emerald-50 p-3 rounded-2xl border border-emerald-200">
+                            <div class="text-xs font-bold text-emerald-700 uppercase">Affirmative (+)</div>
+                            <p class="text-lg">I / You / We / They <span class="text-emerald-600 font-bold underline">like</span> ice cream. <span class="text-xl">🍦</span></p>
+                        </div>
+                        <div class="bg-emerald-50 p-3 rounded-2xl border border-emerald-200">
+                            <div class="text-xs font-bold text-emerald-700 uppercase">Negative (-)</div>
+                            <p class="text-lg">I / You / We / They <span class="text-rose-500 font-bold underline">don't like</span> spiders. <span class="text-xl">🕷️</span></p>
+                        </div>
+                        <div class="bg-emerald-50 p-3 rounded-2xl border border-emerald-200">
+                            <div class="text-xs font-bold text-emerald-700 uppercase">Question (?)</div>
+                            <p class="text-lg"><span class="text-blue-600 font-bold underline">Do</span> you <span class="text-emerald-600 font-bold">like</span> music? <span class="text-xl">🎵</span></p>
+                            <p class="text-xs text-slate-500 mt-1">➜ Yes, I <span class="font-bold text-blue-600">do</span>. / No, I <span class="font-bold text-rose-500">don't</span>.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Group 2: He, She, It -->
+                <div class="bg-white rounded-3xl p-6 border-4 border-amber-100 shadow-sm relative overflow-hidden">
+                    <div class="absolute top-0 right-0 bg-amber-500 text-white font-bold px-4 py-1 rounded-bl-2xl text-xs uppercase tracking-wider">
+                        Group B (Third Person Singular)
+                    </div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center text-2xl font-bold font-heading">
+                            HE
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold font-heading text-slate-800">He, She, It</h3>
+                            <p class="text-xs text-slate-500">Requires special attention! Remember the 'S'!</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 font-medium text-slate-700">
+                        <div class="bg-amber-50 p-3 rounded-2xl border border-amber-200">
+                            <div class="text-xs font-bold text-amber-700 uppercase">Affirmative (+) <span class="text-rose-500 font-bold">Add 'S'!</span></div>
+                            <p class="text-lg">He / She / It <span class="text-amber-600 font-bold underline">like<span class="text-rose-500 font-extrabold">s</span></span> pizza. <span class="text-xl">🍕</span></p>
+                        </div>
+                        <div class="bg-amber-50 p-3 rounded-2xl border border-amber-200">
+                            <div class="text-xs font-bold text-amber-700 uppercase">Negative (-) <span class="text-xs text-slate-500 font-normal">(Verb loses 'S')</span></div>
+                            <p class="text-lg">He / She / It <span class="text-rose-500 font-bold underline">doesn't like</span> broccoli. <span class="text-xl">🥦</span></p>
+                        </div>
+                        <div class="bg-amber-50 p-3 rounded-2xl border border-amber-200">
+                            <div class="text-xs font-bold text-amber-700 uppercase">Question (?) <span class="text-xs text-slate-500 font-normal">(Verb loses 'S')</span></div>
+                            <p class="text-lg"><span class="text-blue-600 font-bold underline">Does</span> she <span class="text-amber-600 font-bold">like</span> cats? <span class="text-xl">🐱</span></p>
+                            <p class="text-xs text-slate-500 mt-1">➜ Yes, she <span class="font-bold text-blue-600">does</span>. / No, she <span class="font-bold text-rose-500">doesn't</span>.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Golden Rule Alert Box -->
+            <div class="bg-amber-400/10 border-2 border-amber-400 rounded-3xl p-5 flex items-start space-x-4">
+                <div class="p-3 bg-amber-400 text-slate-900 rounded-2xl text-2xl">
+                    <i class="fa-solid fa-lightbulb"></i>
+                </div>
+                <div>
+                    <h4 class="font-heading font-bold text-lg text-slate-800">The Golden "S" Rule! 🌟</h4>
+                    <p class="text-sm text-slate-600 mt-0.5">
+                        In <strong>Affirmative</strong> sentences with <em>He, She, It</em>, add <strong>-s</strong> to verbs: 
+                        <span class="bg-white px-2 py-0.5 rounded font-bold text-slate-800 border">likes</span>, 
+                        <span class="bg-white px-2 py-0.5 rounded font-bold text-slate-800 border">loves</span>, 
+                        <span class="bg-white px-2 py-0.5 rounded font-bold text-slate-800 border">hates</span>, 
+                        <span class="bg-white px-2 py-0.5 rounded font-bold text-slate-800 border">enjoys</span>.<br/>
+                        <strong>BUT</strong> when you use <strong>Does</strong> or <strong>Doesn't</strong>, the 'S' disappears from the main verb!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="text-center pt-2">
+                <button onclick="switchTab('choice')" class="bg-brand-purple hover:bg-indigo-600 text-white font-heading font-bold text-lg px-8 py-4 rounded-2xl shadow-pop transform active:translate-y-1 transition-all inline-flex items-center space-x-3">
+                    <span>Start Practice Quiz</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+
+        <!-- ================= SECTION 2: DO OR DOES? (CHOICE GAME) ================= -->
+        <section id="section-choice" class="hidden space-y-6">
+            <!-- Game Card -->
+            <div class="bg-white rounded-3xl p-6 sm:p-8 border-4 border-slate-200 shadow-xl max-w-2xl mx-auto">
+                <!-- Header Info -->
+                <div class="flex justify-between items-center mb-6">
+                    <span id="choice-question-num" class="bg-brand-purple/10 text-brand-purple font-heading font-bold px-4 py-1.5 rounded-full text-sm">
+                        Question 1 of 8
+                    </span>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-bold text-slate-400 uppercase">Progress</span>
+                        <div class="w-28 bg-slate-100 rounded-full h-3 border overflow-hidden">
+                            <div id="choice-progress-bar" class="bg-brand-purple h-full transition-all duration-300" style="width: 12.5%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question Prompt -->
+                <div class="text-center my-8">
+                    <span id="choice-category" class="text-xs font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-3 py-1 rounded-full">Grammar Focus</span>
+                    <h3 id="choice-sentence" class="text-2xl sm:text-3xl font-heading font-bold text-slate-800 mt-4 leading-relaxed">
+                        ______ he like playing video games?
+                    </h3>
+                </div>
+
+                <!-- Options Grid -->
+                <div id="choice-options" class="grid grid-cols-2 gap-4 my-6">
+                    <!-- Dynamic option buttons inserted via JS -->
+                </div>
+
+                <!-- Feedback Area -->
+                <div id="choice-feedback" class="hidden p-4 rounded-2xl text-center font-bold font-heading text-lg transition-all">
+                    <!-- Correct/Incorrect message -->
+                </div>
+
+                <!-- Next Button -->
+                <div class="mt-6 text-right">
+                    <button id="choice-next-btn" onclick="nextChoiceQuestion()" class="hidden bg-brand-green hover:bg-emerald-600 text-white font-heading font-bold px-6 py-3 rounded-xl shadow-pop-sm transition-all inline-flex items-center space-x-2">
+                        <span>Next Question</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= SECTION 3: SENTENCE BUILDER ================= -->
+        <section id="section-builder" class="hidden space-y-6">
+            <div class="bg-white rounded-3xl p-6 sm:p-8 border-4 border-slate-200 shadow-xl max-w-2xl mx-auto">
+                <!-- Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <span id="builder-question-num" class="bg-brand-pink/10 text-brand-pink font-heading font-bold px-4 py-1.5 rounded-full text-sm">
+                        Puzzle 1 of 6
+                    </span>
+                    <span class="text-xs font-bold text-slate-400 uppercase">Unscramble the sentence</span>
+                </div>
+
+                <!-- Visual Hint / Target -->
+                <div class="text-center my-4">
+                    <div id="builder-hint-icon" class="text-5xl mb-2 animate-bounce-short">🥦</div>
+                    <p class="text-slate-500 text-sm font-medium">Click the word tiles in the correct order:</p>
+                </div>
+
+                <!-- Sentence Construction Drop Zone -->
+                <div id="builder-dropzone" class="min-h-[80px] bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl p-3 flex flex-wrap items-center justify-center gap-2 mb-6 transition-all">
+                    <!-- Selected words will go here -->
+                </div>
+
+                <!-- Available Word Pool -->
+                <div id="builder-wordpool" class="flex flex-wrap items-center justify-center gap-2.5 p-4 bg-slate-100 rounded-2xl mb-6">
+                    <!-- Scrambled word tiles inserted via JS -->
+                </div>
+
+                <!-- Controls & Feedback -->
+                <div class="flex items-center justify-between">
+                    <button onclick="resetCurrentBuilder()" class="text-slate-400 hover:text-slate-600 font-bold text-sm px-3 py-2 rounded-lg hover:bg-slate-100 transition-all">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> Reset
+                    </button>
+
+                    <div id="builder-feedback" class="text-sm font-bold font-heading hidden"></div>
+
+                    <button id="builder-check-btn" onclick="checkBuilderSentence()" class="bg-brand-purple hover:bg-indigo-600 text-white font-heading font-bold px-6 py-3 rounded-xl shadow-pop-sm transition-all">
+                        Check Sentence
+                    </button>
+                    <button id="builder-next-btn" onclick="nextBuilderQuestion()" class="hidden bg-brand-green hover:bg-emerald-600 text-white font-heading font-bold px-6 py-3 rounded-xl shadow-pop-sm transition-all">
+                        Next <i class="fa-solid fa-chevron-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= SECTION 4: CHARACTER PROFILES QUIZ ================= -->
+        <section id="section-profile" class="hidden space-y-6">
+            <!-- Profile Selector Tabs -->
+            <div class="flex justify-center space-x-3 mb-6">
+                <button onclick="loadProfile(0)" id="char-btn-0" class="char-tab-btn px-4 py-2 rounded-2xl font-heading font-bold text-sm flex items-center space-x-2 bg-brand-yellow text-slate-800 shadow-pop-sm">
+                    <span>🦁 Leo the Lion</span>
+                </button>
+                <button onclick="loadProfile(1)" id="char-btn-1" class="char-tab-btn px-4 py-2 rounded-2xl font-heading font-bold text-sm flex items-center space-x-2 bg-white text-slate-600 border-2 border-slate-200">
+                    <span>👧 Sarah</span>
+                </button>
+                <button onclick="loadProfile(2)" id="char-btn-2" class="char-tab-btn px-4 py-2 rounded-2xl font-heading font-bold text-sm flex items-center space-x-2 bg-white text-slate-600 border-2 border-slate-200">
+                    <span>🤖 Rob the Robot</span>
+                </button>
+            </div>
+
+            <!-- Profile Content Card -->
+            <div class="bg-white rounded-3xl p-6 sm:p-8 border-4 border-slate-200 shadow-xl max-w-3xl mx-auto">
+                <!-- Character Header -->
+                <div class="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-200 mb-6">
+                    <div id="char-avatar" class="text-6xl bg-white p-4 rounded-2xl shadow-sm border">🦁</div>
+                    <div class="text-center sm:text-left flex-grow">
+                        <h3 id="char-name" class="text-2xl font-heading font-bold text-slate-800">Leo the Lion</h3>
+                        <p id="char-bio" class="text-sm text-slate-500 mt-1">Loves forest adventures, hates rain!</p>
+                        
+                        <!-- Preference Badges Grid -->
+                        <div class="mt-4 flex flex-wrap gap-2 justify-center sm:justify-start" id="char-preferences">
+                            <!-- E.g., ❤️ Pizza | ❌ Swimming -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Questions List for this Character -->
+                <div class="space-y-6" id="char-questions-container">
+                    <!-- Dynamic Question items -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BADGE UNLOCK MODAL -->
+    <div id="badge-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl border-4 border-brand-yellow transform transition-all animate-bounce-short">
+            <div class="w-20 h-20 bg-amber-100 text-amber-500 text-4xl rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-amber-300">
+                <i id="badge-modal-icon" class="fa-solid fa-trophy"></i>
+            </div>
+            <h3 class="text-2xl font-heading font-bold text-slate-800">New Badge Unlocked!</h3>
+            <p id="badge-modal-title" class="text-lg font-bold text-brand-purple mt-1">Grammar Novice</p>
+            <p id="badge-modal-desc" class="text-sm text-slate-500 mt-2">You answered your first question correctly!</p>
+            <button onclick="closeBadgeModal()" class="mt-6 w-full bg-brand-yellow hover:bg-amber-400 text-slate-900 font-heading font-bold py-3 rounded-xl shadow-pop-sm transition-all">
+                Awesome!
+            </button>
+        </div>
+    </div>
+
+    <!-- AUDIO EFFECTS (Web Audio API Synthesizer - No external files required) -->
+    <script>
+        // Sound Synthesizer using Web Audio API
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now); // A3
+                osc.frequency.exponentialRampToValueAtTime(164.81, now + 0.2); // E3
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'badge') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            }
+        }
+    </script>
+
+    <!-- MAIN APP JAVASCRIPT LOGIC -->
+    <script>
+        // ================= STATE MANAGEMENT =================
+        const state = {
+            score: 0,
+            streak: 0,
+            badges: new Set(),
+            choiceIndex: 0,
+            builderIndex: 0,
+            currentCharProfile: 0
+        };
+
+        const BADGES_LIST = {
+            firstWin: { name: 'First Step!', icon: 'fa-star', desc: 'Answered your first question correctly.' },
+            streak3: { name: 'On Fire!', icon: 'fa-fire', desc: 'Reached a streak of 3 correct answers.' },
+            choiceMaster: { name: 'Do/Does Master', icon: 'fa-circle-check', desc: 'Completed all Multiple Choice questions!' },
+            builderMaster: { name: 'Sentence Architect', icon: 'fa-puzzle-piece', desc: 'Built all sentences correctly!' }
+        };
+
+        // ================= DATA SETS =================
+
+        // 1. Choice Questions Data
+        const choiceQuestions = [
+            {
+                sentence: "______ he like playing video games?",
+                options: ["Do", "Does", "Is"],
+                correct: "Does",
+                category: "Question Form (He)",
+                explanation: "We use 'Does' for He/She/It in questions!"
+            },
+            {
+                sentence: "She ______ like eating mushrooms.",
+                options: ["don't", "doesn't", "not"],
+                correct: "doesn't",
+                category: "Negative Form (She)",
+                explanation: "We use 'doesn't' (does not) for She/He/It."
+            },
+            {
+                sentence: "They ______ pizza and pasta very much.",
+                options: ["likes", "like", "liking"],
+                correct: "like",
+                category: "Affirmative Form (They)",
+                explanation: "'They' takes the base verb 'like' without an 's'."
+            },
+            {
+                sentence: "My dog ______ chasing tennis balls.",
+                options: ["love", "loves", "is love"],
+                correct: "loves",
+                category: "Affirmative Form (It/Dog)",
+                explanation: "'My dog' is 'It', so we add 's' -> loves!"
+            },
+            {
+                sentence: "______ you like listening to pop music?",
+                options: ["Does", "Do", "Are"],
+                correct: "Do",
+                category: "Question Form (You)",
+                explanation: "We use 'Do' for I/You/We/They in questions."
+            },
+            {
+                sentence: "He doesn't ______ raw carrots.",
+                options: ["likes", "like", "liked"],
+                correct: "like",
+                category: "Negative Form (Rule)",
+                explanation: "After 'doesn't', the main verb loses its 's' and goes back to 'like'!"
+            },
+            {
+                sentence: "We ______ want to go out in the rain.",
+                options: ["don't", "doesn't", "not"],
+                correct: "don't",
+                category: "Negative Form (We)",
+                explanation: "'We' pairs with 'don't'."
+            },
+            {
+                sentence: "Does Sarah ______ chocolate cake?",
+                options: ["likes", "like", "loving"],
+                correct: "like",
+                category: "Question Form (Rule)",
+                explanation: "After 'Does', use the base form 'like' without 's'!"
+            }
+        ];
+
+        // 2. Sentence Builder Data
+        const builderQuestions = [
+            {
+                icon: "🥦",
+                words: ["She", "doesn't", "like", "green", "broccoli."],
+                correct: "She doesn't like green broccoli."
+            },
+            {
+                icon: "⚽",
+                words: ["Do", "you", "like", "soccer?"],
+                correct: "Do you like soccer?"
+            },
+            {
+                icon: "🐱",
+                words: ["He", "loves", "cats."],
+                correct: "He loves cats."
+            },
+            {
+                icon: "🕷️",
+                words: ["They", "don't", "like", "spiders."],
+                correct: "They don't like spiders."
+            },
+            {
+                icon: "🍕",
+                words: ["Does", "Alex", "like", "pizza?"],
+                correct: "Does Alex like pizza?"
+            },
+            {
+                icon: "🍦",
+                words: ["We", "really", "like", "ice cream."],
+                correct: "We really like ice cream."
+            },
+            {
+                icon: "🎮",
+                words: ["Does", "he", "like", "video games?"],
+                correct: "Does he like video games?"
+            },
+            {
+                icon: "🐶",
+                words: ["She", "loves", "dogs."],
+                correct: "She loves dogs."
+            },
+            {
+                icon: "🥕",
+                words: ["They", "don't", "want", "carrots."],
+                correct: "They don't want carrots."
+            },
+            {
+                icon: "🎨",
+                words: ["She", "likes", "art."],
+                correct: "She likes art."
+            },
+            {
+                icon: "🌧️",
+                words: ["Do", "they", "hate", "rain?"],
+                correct: "Do they hate rain?"
+            },
+            {
+                icon: "🎵",
+                words: ["He", "doesn't", "like", "music."],
+                correct: "He doesn't like music."
+            }
+        ];
+
+        // 3. Character Profiles Data
+        const characterProfiles = [
+            {
+                name: "Leo the Lion 🦁",
+                avatar: "🦁",
+                bio: "Loves sunny days and sleeping in the shade!",
+                likes: ["☀️ Sunny Weather", "🥩 Fresh Meat", "😴 Sleeping"],
+                dislikes: ["🌧️ Rain", "🌊 Swimming"],
+                questions: [
+                    {
+                        q: "Does Leo like sunny weather?",
+                        options: ["Yes, he does.", "No, he doesn't.", "Yes, he likes."],
+                        correct: "Yes, he does."
+                    },
+                    {
+                        q: "Does Leo like swimming?",
+                        options: ["Yes, he does.", "No, he doesn't.", "No, he don't."],
+                        correct: "No, he doesn't."
+                    }
+                ]
+            },
+            {
+                name: "Sarah 👧",
+                avatar: "👧",
+                bio: "A talented student who enjoys music and art!",
+                likes: ["🎨 Painting", "🎵 Music", "🍕 Pizza"],
+                dislikes: ["🥦 Broccoli", "🎮 Video Games"],
+                questions: [
+                    {
+                        q: "Does Sarah like painting?",
+                        options: ["Yes, she does.", "No, she doesn't.", "Yes, she do."],
+                        correct: "Yes, she does."
+                    },
+                    {
+                        q: "Does Sarah like broccoli?",
+                        options: ["Yes, she does.", "No, she doesn't.", "No, she not like."],
+                        correct: "No, she doesn't."
+                    }
+                ]
+            },
+            {
+                name: "Rob the Robot 🤖",
+                avatar: "🤖",
+                bio: "A futuristic bot powered by electricity!",
+                likes: ["🔋 Batteries", "🎮 Video Games", "⚡ Electricity"],
+                dislikes: ["🌊 Water", "🌧️ Rain"],
+                questions: [
+                    {
+                        q: "Does Rob like water?",
+                        options: ["Yes, it does.", "No, it doesn't.", "No, he don't."],
+                        correct: "No, it doesn't."
+                    },
+                    {
+                        q: "Does Rob like video games?",
+                        options: ["Yes, it does.", "No, it doesn't.", "Yes, it like."],
+                        correct: "Yes, it does."
+                    }
+                ]
+            }
+        ];
+
+        // ================= CORE FUNCTIONS =================
+
+        // Navigation Switcher
+        function switchTab(tabId) {
+            // Hide all sections
+            ['guide', 'choice', 'builder', 'profile'].forEach(id => {
+                document.getElementById(`section-${id}`).classList.add('hidden');
+                const btn = document.getElementById(`tab-${id}`);
+                btn.className = "tab-btn flex items-center space-x-2 px-5 py-2.5 rounded-xl font-heading font-bold text-sm transition-all bg-white text-slate-600 hover:bg-slate-100 border-2 border-slate-200";
+            });
+
+            // Show active section
+            document.getElementById(`section-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.className = "tab-btn flex items-center space-x-2 px-5 py-2.5 rounded-xl font-heading font-bold text-sm transition-all bg-brand-purple text-white shadow-pop-sm";
+
+            // Init specific views if needed
+            if(tabId === 'choice' && state.choiceIndex === 0) loadChoiceQuestion();
+            if(tabId === 'builder' && state.builderIndex === 0) loadBuilderQuestion();
+            if(tabId === 'profile') loadProfile(state.currentCharProfile);
+        }
+
+        // Score & Streak Manager
+        function addPoints(pts) {
+            state.score += pts;
+            state.streak += 1;
+            document.getElementById('score-display').innerText = state.score;
+            document.getElementById('streak-display').innerText = state.streak;
+
+            // Check Streaks & Badges
+            if(state.score > 0 && !state.badges.has('firstWin')) unlockBadge('firstWin');
+            if(state.streak >= 3 && !state.badges.has('streak3')) unlockBadge('streak3');
+        }
+
+        function resetStreak() {
+            state.streak = 0;
+            document.getElementById('streak-display').innerText = state.streak;
+        }
+
+        function unlockBadge(badgeKey) {
+            state.badges.add(badgeKey);
+            const badge = BADGES_LIST[badgeKey];
+            document.getElementById('badge-display').innerText = `${state.badges.size}/4`;
+
+            // Display Modal
+            document.getElementById('badge-modal-title').innerText = badge.name;
+            document.getElementById('badge-modal-desc').innerText = badge.desc;
+            document.getElementById('badge-modal-icon').className = `fa-solid ${badge.icon}`;
+            document.getElementById('badge-modal').classList.remove('hidden');
+
+            playSound('badge');
+            confetti({ particleCount: 80, spread: 60, origin: { y: 0.6 } });
+        }
+
+        function closeBadgeModal() {
+            document.getElementById('badge-modal').classList.add('hidden');
+        }
+
+
+        // ================= GAME 1: DO OR DOES (CHOICE) =================
+        function loadChoiceQuestion() {
+            const q = choiceQuestions[state.choiceIndex];
+            document.getElementById('choice-question-num').innerText = `Question ${state.choiceIndex + 1} of ${choiceQuestions.length}`;
+            document.getElementById('choice-progress-bar').style.width = `${((state.choiceIndex + 1) / choiceQuestions.length) * 100}%`;
+            document.getElementById('choice-category').innerText = q.category;
+            document.getElementById('choice-sentence').innerText = q.sentence;
+
+            const optionsContainer = document.getElementById('choice-options');
+            optionsContainer.innerHTML = '';
+
+            // Reset Feedback & Next Btn
+            const feedback = document.getElementById('choice-feedback');
+            feedback.classList.add('hidden');
+            document.getElementById('choice-next-btn').classList.add('hidden');
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "choice-opt-btn bg-slate-50 hover:bg-brand-purple hover:text-white border-2 border-slate-200 hover:border-brand-purple font-heading font-bold text-xl py-4 rounded-2xl shadow-pop-sm transition-all transform active:scale-95";
+                btn.innerText = opt;
+                btn.onclick = () => checkChoiceAnswer(opt, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkChoiceAnswer(selectedOpt, btnElement) {
+            const q = choiceQuestions[state.choiceIndex];
+            const feedback = document.getElementById('choice-feedback');
+            
+            // Disable all option buttons
+            const allBtns = document.querySelectorAll('.choice-opt-btn');
+            allBtns.forEach(b => b.disabled = true);
+
+            if(selectedOpt === q.correct) {
+                playSound('correct');
+                btnElement.className = "bg-brand-green text-white border-2 border-emerald-600 font-heading font-bold text-xl py-4 rounded-2xl shadow-pop-sm";
+                feedback.className = "p-4 rounded-2xl text-center font-bold font-heading text-lg bg-emerald-100 text-emerald-800 border-2 border-emerald-300";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-check mr-2"></i> Correct! ${q.explanation}`;
+                addPoints(10);
+                confetti({ particleCount: 40, spread: 50, origin: { y: 0.7 } });
+            } else {
+                playSound('wrong');
+                btnElement.className = "bg-rose-500 text-white border-2 border-rose-700 font-heading font-bold text-xl py-4 rounded-2xl shadow-pop-sm";
+                feedback.className = "p-4 rounded-2xl text-center font-bold font-heading text-lg bg-rose-100 text-rose-800 border-2 border-rose-300";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-xmark mr-2"></i> Oops! The correct answer is <strong>${q.correct}</strong>. ${q.explanation}`;
+                resetStreak();
+            }
+
+            feedback.classList.remove('hidden');
+            document.getElementById('choice-next-btn').classList.remove('hidden');
+        }
+
+        function nextChoiceQuestion() {
+            if(state.choiceIndex < choiceQuestions.length - 1) {
+                state.choiceIndex++;
+                loadChoiceQuestion();
+            } else {
+                // Completed Choice module
+                if(!state.badges.has('choiceMaster')) unlockBadge('choiceMaster');
+                alert("Great job! You completed all the Multiple Choice questions!");
+                state.choiceIndex = 0;
+                loadChoiceQuestion();
+            }
+        }
+
+
+        // ================= GAME 2: SENTENCE BUILDER =================
+        let currentSelectedWords = [];
+
+        function loadBuilderQuestion() {
+            const q = builderQuestions[state.builderIndex];
+            document.getElementById('builder-question-num').innerText = `Puzzle ${state.builderIndex + 1} of ${builderQuestions.length}`;
+            document.getElementById('builder-hint-icon').innerText = q.icon;
+            
+            // Reset Dropzone & Feedback
+            currentSelectedWords = [];
+            renderBuilderTiles();
+
+            document.getElementById('builder-feedback').classList.add('hidden');
+            document.getElementById('builder-check-btn').classList.remove('hidden');
+            document.getElementById('builder-next-btn').classList.add('hidden');
+        }
+
+        function renderBuilderTiles() {
+            const q = builderQuestions[state.builderIndex];
+            const dropzone = document.getElementById('builder-dropzone');
+            const wordpool = document.getElementById('builder-wordpool');
+
+            dropzone.innerHTML = '';
+            wordpool.innerHTML = '';
+
+            // Selected Words in Dropzone
+            if(currentSelectedWords.length === 0) {
+                dropzone.innerHTML = '<span class="text-slate-400 text-sm italic pointer-events-none">Tap words below to build sentence...</span>';
+            } else {
+                currentSelectedWords.forEach((wordObj, idx) => {
+                    const tile = document.createElement('button');
+                    tile.className = "bg-brand-purple text-white font-heading font-bold px-4 py-2 rounded-xl text-lg shadow-pop-sm hover:bg-rose-500 transition-colors";
+                    tile.innerText = wordObj.text;
+                    tile.onclick = () => removeWordFromSentence(idx);
+                    dropzone.appendChild(tile);
+                });
+            }
+
+            // Available Scrambled Words in Pool
+            // Create scrambled array if first load
+            if(!q.scrambled) {
+                q.scrambled = [...q.words].sort(() => Math.random() - 0.5);
+            }
+
+            q.scrambled.forEach((word, idx) => {
+                const isUsed = currentSelectedWords.some(item => item.poolIndex === idx);
+                if(!isUsed) {
+                    const tile = document.createElement('button');
+                    tile.className = "bg-white hover:bg-slate-200 border-2 border-slate-300 text-slate-800 font-heading font-bold px-4 py-2 rounded-xl text-lg shadow-pop-sm transition-all transform active:scale-95";
+                    tile.innerText = word;
+                    tile.onclick = () => addWordToSentence(word, idx);
+                    wordpool.appendChild(tile);
+                }
+            });
+        }
+
+        function addWordToSentence(word, poolIndex) {
+            currentSelectedWords.push({ text: word, poolIndex: poolIndex });
+            renderBuilderTiles();
+        }
+
+        function removeWordFromSentence(index) {
+            currentSelectedWords.splice(index, 1);
+            renderBuilderTiles();
+        }
+
+        function resetCurrentBuilder() {
+            currentSelectedWords = [];
+            renderBuilderTiles();
+        }
+
+        function checkBuilderSentence() {
+            const q = builderQuestions[state.builderIndex];
+            const constructed = currentSelectedWords.map(w => w.text).join(' ');
+            const feedback = document.getElementById('builder-feedback');
+
+            if(constructed === q.correct) {
+                playSound('correct');
+                feedback.className = "text-emerald-600 font-bold font-heading text-lg block";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> Perfect sentence!`;
+                addPoints(15);
+                confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+
+                document.getElementById('builder-check-btn').classList.add('hidden');
+                document.getElementById('builder-next-btn').classList.remove('hidden');
+            } else {
+                playSound('wrong');
+                feedback.className = "text-rose-500 font-bold font-heading text-lg block";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> Not quite! Try again.`;
+                resetStreak();
+            }
+            feedback.classList.remove('hidden');
+        }
+
+        function nextBuilderQuestion() {
+            if(state.builderIndex < builderQuestions.length - 1) {
+                state.builderIndex++;
+                loadBuilderQuestion();
+            } else {
+                if(!state.badges.has('builderMaster')) unlockBadge('builderMaster');
+                alert("Awesome job! You built all sentences correctly!");
+                state.builderIndex = 0;
+                loadBuilderQuestion();
+            }
+        }
+
+
+        // ================= GAME 3: CHARACTER PROFILE QUIZ =================
+        function loadProfile(charIndex) {
+            state.currentCharProfile = charIndex;
+            const char = characterProfiles[charIndex];
+
+            // Update Tab Button Styles
+            [0, 1, 2].forEach(idx => {
+                const btn = document.getElementById(`char-btn-${idx}`);
+                if(idx === charIndex) {
+                    btn.className = "char-tab-btn px-4 py-2 rounded-2xl font-heading font-bold text-sm flex items-center space-x-2 bg-brand-yellow text-slate-800 shadow-pop-sm";
+                } else {
+                    btn.className = "char-tab-btn px-4 py-2 rounded-2xl font-heading font-bold text-sm flex items-center space-x-2 bg-white text-slate-600 border-2 border-slate-200";
+                }
+            });
+
+            // Set Header Info
+            document.getElementById('char-avatar').innerText = char.avatar;
+            document.getElementById('char-name').innerText = char.name;
+            document.getElementById('char-bio').innerText = char.bio;
+
+            // Render Likes/Dislikes Badges
+            const prefContainer = document.getElementById('char-preferences');
+            prefContainer.innerHTML = '';
+            char.likes.forEach(item => {
+                const badge = document.createElement('span');
+                badge.className = "bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full border border-emerald-300";
+                badge.innerText = `👍 ${item}`;
+                prefContainer.appendChild(badge);
+            });
+            char.dislikes.forEach(item => {
+                const badge = document.createElement('span');
+                badge.className = "bg-rose-100 text-rose-800 text-xs font-bold px-3 py-1 rounded-full border border-rose-300";
+                badge.innerText = `👎 ${item}`;
+                prefContainer.appendChild(badge);
+            });
+
+            // Render Questions
+            const qContainer = document.getElementById('char-questions-container');
+            qContainer.innerHTML = '';
+
+            char.questions.forEach((qObj, qIdx) => {
+                const card = document.createElement('div');
+                card.className = "p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-3";
+                
+                // Build options dynamically using DOM elements to avoid quotes escaping issues
+                const optionsGrid = document.createElement('div');
+                optionsGrid.className = "grid grid-cols-1 sm:grid-cols-3 gap-3";
+
+                qObj.options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = "profile-opt-btn bg-white hover:bg-brand-purple hover:text-white border-2 border-slate-200 font-heading font-bold text-base py-3 px-4 rounded-xl shadow-pop-sm transition-all text-left";
+                    btn.innerText = opt;
+                    btn.onclick = function() {
+                        checkProfileAnswer(opt, qObj.correct, btn);
+                    };
+                    optionsGrid.appendChild(btn);
+                });
+
+                card.innerHTML = `
+                    <p class="font-heading font-bold text-lg text-slate-800">${qIdx + 1}. ${qObj.q}</p>
+                `;
+                card.appendChild(optionsGrid);
+
+                const feedbackDiv = document.createElement('div');
+                feedbackDiv.className = "profile-feedback hidden text-sm font-bold font-heading p-3 rounded-xl mt-2";
+                card.appendChild(feedbackDiv);
+
+                qContainer.appendChild(card);
+            });
+        }
+
+        function checkProfileAnswer(selectedOpt, correctOpt, btnElement) {
+            const parentCard = btnElement.closest('.space-y-3');
+            const feedback = parentCard.querySelector('.profile-feedback');
+            const siblingBtns = parentCard.querySelectorAll('.profile-opt-btn');
+
+            siblingBtns.forEach(b => b.disabled = true);
+
+            if(selectedOpt === correctOpt) {
+                playSound('correct');
+                btnElement.className = "bg-brand-green text-white border-2 border-emerald-600 font-heading font-bold text-base py-3 px-4 rounded-xl shadow-pop-sm text-left";
+                feedback.className = "profile-feedback text-sm font-bold font-heading p-3 rounded-xl mt-2 bg-emerald-100 text-emerald-800 border border-emerald-300";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> Correct answer!`;
+                addPoints(10);
+                confetti({ particleCount: 30, spread: 40, origin: { y: 0.7 } });
+            } else {
+                playSound('wrong');
+                btnElement.className = "bg-rose-500 text-white border-2 border-rose-700 font-heading font-bold text-base py-3 px-4 rounded-xl shadow-pop-sm text-left";
+                feedback.className = "profile-feedback text-sm font-bold font-heading p-3 rounded-xl mt-2 bg-rose-100 text-rose-800 border border-rose-300";
+                feedback.innerText = `❌ Incorrect! The right answer is "${correctOpt}"`;
+                resetStreak();
+            }
+            feedback.classList.remove('hidden');
+        }
+
+        // Initialize App on load
+        window.onload = function() {
+            switchTab('guide');
+        };
+    </script>
+</body>
+</html>
